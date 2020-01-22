@@ -4,6 +4,7 @@ project(ccf_csp_problems)
 set(CMAKE_CXX_STANDARD 11)
 
 add_compile_definitions(_DEBUG)
+include_directories(util)
 add_executable(201909-1 201909-1/main.cpp util/redirect.cpp)
 add_executable(201909-2 201909-2/main.cpp)
 add_executable(201909-3 201909-3/main.cpp)
