@@ -1,5 +1,5 @@
-id="$1"
-title="$2$1"
+id="$2"
+title="$1$2"
 folder="${title}"
 complile="${folder}/main.cpp"
 
