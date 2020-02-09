@@ -24,8 +24,8 @@ inline void broadcastNeighbor(int node, int tp) {
 }
 
 inline void query(int node, int t) {
-    auto it = timepoints.cbegin();
-    for (; it != timepoints.cend() && *it <= t; ++it) {
+    auto it = timepoints.begin();
+    for (; it != timepoints.end() && *it <= t; ++it) {
         int tp = *it;
         // 先处理接收
         if (transmission.count(tp)) {
