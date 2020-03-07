@@ -19,7 +19,6 @@ h3
 div p
 div div p
 */
-#include "pch.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -129,7 +128,7 @@ Selector* createSelector(string sel) {
 	else {
 		auto s = new TagSelector();
 		s->tagname = sel;
-		transform(s->tagname.begin(), s->tagname.end(), s->tagname.begin(), ::toupper);
+		for_each(s->tagname.begin(), s->tagname.end(), ::toupper);
 		return s;
 	}
 }
@@ -170,7 +169,7 @@ Element* parseElementFromS(string s) {
 		elem->tagname = s.substr(contentI, contentEnd-contentI);
 		elem->id = s.substr(other+1);
 	}
-	transform(elem->tagname.cbegin(), elem->tagname.cend(), elem->tagname.begin(), ::toupper);
+	for_each(elem->tagname.cbegin(), elem->tagname.cend(), ::toupper);
 	elem->depth = contentI / 2;
 	return elem;
 }

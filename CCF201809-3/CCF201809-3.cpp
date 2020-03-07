@@ -1,5 +1,6 @@
 ﻿// CCF201809-3.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
 //
+
 /*
 11 5
 html
@@ -19,45 +20,39 @@ h3
 div p
 div div p
 */
-#include "pch.h"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <stack>
-#include <algorithm>
-#include <iterator>
-#include <cctype>
+
+#include <bits/stdc++.h>
 using namespace std;
 
 struct Element {
 	string tagname;
 	string id;
-	int depth;
-	int line;
-	Element* parent;
-	vector<Element*> childs;
+	size_t depth{};
+    size_t line{};
+	Element* parent{};
+	vector<Element*> children;
 };
 struct Selector {
 	virtual bool match(Element* elem) = 0;
 };
-struct SimpleSelector:Selector {};
-struct ComplexSelector :Selector {};
-struct TagSelector:SimpleSelector {
+struct DirectSelector: Selector {};
+struct PathSelector : Selector {};
+struct TagSelector: DirectSelector {
 	string tagname;
-	bool match(Element* elem) {
+	bool match(Element* elem) override {
 		return tagname == elem->tagname;
 	}
 };
-struct IDSelector:SimpleSelector {
+struct IDSelector: DirectSelector {
 	string id;
-	bool match(Element* elem) {
+	bool match(Element* elem) override {
 		return id == elem->id;
 	}
 };
-struct TwoGrandChildSelector :ComplexSelector {
-	SimpleSelector* firstSel;
-	SimpleSelector* secondSel;
-	bool match(Element* elem) {
+struct TwoGrandChildSelector : PathSelector {
+	DirectSelector* firstSel{};
+	DirectSelector* secondSel{};
+	bool match(Element* elem) override {
 		if (!secondSel->match(elem)) {
 			return false;
 		}
@@ -71,11 +66,11 @@ struct TwoGrandChildSelector :ComplexSelector {
 		return false;
 	}
 };
-struct GrandChildSelector :ComplexSelector {
-	vector<SimpleSelector*> Sels;
-	bool match(Element* elem) {
+struct GrandChildSelector : PathSelector {
+	vector<DirectSelector*> Sels;
+	bool match(Element* elem) override {
 		if (Sels.empty()) { return false; }
-		reverse_iterator<vector<SimpleSelector*>::const_iterator> it = Sels.crbegin();
+		reverse_iterator<vector<DirectSelector*>::const_iterator> it = Sels.crbegin();
 		if (!(*it)->match(elem)) {
 			return false;
 		}
@@ -97,8 +92,8 @@ struct GrandChildSelector :ComplexSelector {
 		return true;
 	}
 };
-SimpleSelector* createSimpleSelector(string sel) {
-	if (sel.size() <= 0) {
+DirectSelector* createDirectSelector(string sel) {
+	if (sel.empty()) {
 		return nullptr;
 	}
 	if (sel[0] == '#') {
@@ -109,13 +104,13 @@ SimpleSelector* createSimpleSelector(string sel) {
 	else {
 		auto s = new TagSelector();
 		s->tagname = sel;
-		transform(s->tagname.begin(), s->tagname.end(), s->tagname.begin(), ::toupper);
+        // you can replace the following for_each with transform(s->tagname.cbegin(), s->tagname.cend(), s->tagname.begin(), [](unsigned char c) {return ::toupper(c);});
+        for_each(s->tagname.begin(), s->tagname.end(), [](char& c) { c = toupper(c, locale::classic()); }); // or use transform(elem->tagname.cbegin(), elem->tagname.cend(), elem->tagname.begin(), ::toupper);
 		return s;
 	}
-	return nullptr;
 }
-ComplexSelector* createComplexSelector(string sel) {
-	if (sel.size() <= 0) {
+PathSelector* createPathSelector(const string& sel) {
+	if (sel.empty()) {
 		return nullptr;
 	}
 	vector<string> g;
@@ -130,16 +125,16 @@ ComplexSelector* createComplexSelector(string sel) {
 	if (g.size() >= 2) {
 		auto s = new GrandChildSelector();
 		for (auto & subSel : g) {
-			s->Sels.push_back(createSimpleSelector(subSel));
+			s->Sels.push_back(createDirectSelector(subSel));
 		}
 		return s;
 	}
 	return nullptr;
 }
-inline Selector* createSelector(string sel) {
-	Selector* r = createComplexSelector(sel);
+inline Selector* createSelector(const string& sel) {
+	Selector* r = createPathSelector(sel);
 	if (r == nullptr) {
-		r = createSimpleSelector(sel);
+		r = createDirectSelector(sel);
 	}
 	return r;
 }
@@ -157,7 +152,7 @@ SelectResult select(Selector* sel, Element* root) {
 		result.Count = 1;
 		result.Lines.push_back(root->line);
 	}
-	for (auto c:root->childs) {
+	for (auto c:root->children) {
 		SelectResult subResult = select(sel, c);
 		result.Count += subResult.Count;
 		result.Lines.insert(result.Lines.end(), subResult.Lines.cbegin(), subResult.Lines.cend());
@@ -180,7 +175,8 @@ Element* parseElementFromS(string s) {
 		elem->tagname = s.substr(contentI, contentEnd-contentI);
 		elem->id = s.substr(other+1);
 	}
-	transform(elem->tagname.cbegin(), elem->tagname.cend(), elem->tagname.begin(), ::toupper);
+	// you can replace the following for_each with transform(elem->tagname.cbegin(), elem->tagname.cend(), elem->tagname.begin(), [](unsigned char c) {return ::toupper(c);});
+    for_each(elem->tagname.begin(), elem->tagname.end(), [](char& c) { c = toupper(c, locale::classic()); });
 	elem->depth = contentI / 2;
 	return elem;
 }
@@ -200,7 +196,7 @@ int main()
 			chain.push(elem);
 		}
 		else {
-			int chainDepth = chain.size() - 1;
+			size_t chainDepth = chain.size() - 1;
 			if (elem->depth > chainDepth + 1) {
 				return -1;
 			}
@@ -209,7 +205,7 @@ int main()
 				chainDepth--;
 			}
 			elem->parent = chain.top();
-			chain.top()->childs.push_back(elem);
+			chain.top()->children.push_back(elem);
 			chain.push(elem);
 		}
 	}
