@@ -1,12 +1,12 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-using nodeidT = int;
-using chainT = vector<nodeidT>;
-using broadcastMsg = pair<nodeidT, chainT>; // 发出节点ID，主链
-vector<vector<nodeidT> > rel; // 节点-邻接表{相连节点...}
-vector<chainT> chain;// 节点-主链{主链节点...}
-unordered_map<int, vector<pair<nodeidT, int>>> creation; // 时间- {{节点，块编号}...}
+using nodeid_t = int;
+using chain_t = vector<nodeid_t>;
+using broadcastMsg = pair<nodeid_t, chain_t>; // 发出节点ID，主链
+vector<vector<nodeid_t> > rel; // 节点-邻接表{相连节点...}
+vector<chain_t> chain;// 节点-主链{主链节点...}
+unordered_map<int, vector<pair<nodeid_t, int>>> creation; // 时间- {{节点，块编号}...}
 unordered_map<int, vector<broadcastMsg> > transmission; // 时间- {节点，链{接收链组成节点...｝}...}
 set<int> timepoints;
 
@@ -23,7 +23,7 @@ inline void broadcastNeighbor(int node, int tp) {
     timepoints.insert(tp + delay); // 不要忘记维护时间点表
 }
 
-inline void query(int node, int t) {
+inline void processAndQuery(int node, int t) {
     auto it = timepoints.begin();
     for (; it != timepoints.end() && *it <= t; ++it) {
         int tp = *it;
@@ -68,7 +68,7 @@ int main() {
     int m;
     cin >> n >> m;
     rel.resize(n + 1);
-    chain.resize(n + 1, chainT(1, 0));
+    chain.resize(n + 1, chain_t(1, 0));
     creation.reserve(2000);
     transmission.reserve(2000);
     for (int i = 1; i <= m; ++i) {
@@ -83,7 +83,7 @@ int main() {
         int a, b, c;
         cin >> a >> b;
         if (cin.get() == '\n' || cin.eof()) {
-            query(a, b);
+            processAndQuery(a, b);
         } else {
             cin >> c;
             gen(a, b, c);
